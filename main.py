@@ -7,38 +7,60 @@ from math import cos
 from math import radians
 from math import sin
 from random import uniform
+from collections import OrderedDict
 settings = {
     "default_size":10,
     "default_speed":0.01,
     "max_energy":5,
     }
+full_features_dict = OrderedDict([("food_distance", 0), ("food_size", 0), ("org_around_food", 0)])
+
 class organism():
     def __init__(self, settings, neural_matrix = None, name=None):
-
+        #position
         self.x = uniform(settings['x_min'], settings['x_max'])  # position (x)
         self.y = uniform(settings['y_min'], settings['y_max'])  # position (y)
-
+        #direction
         self.r = uniform(0,360)                 # orientation   [0, 360]
 
+        #organism properties
         self.speed = settings["default_speed"]
         self.v = self.speed
         self.size = settings["default_size"]
         self.health = self.size
         self.food_count = self.size/2  # fitness (food count)
+        self.d_food = 100   # distance to nearest food
+        self.r_food = 0     # orientation to nearest food
+        self.vision_range = 2
+
+
+        #neural settings
         self.layers_number = 2
         self.neurons_number_in_layer = 5
         self.name = name
         self.intelegence = 1
         self.neural_matrix = neural_matrix
+
+        #features
+        self.features_dict = full_features_dict
+
+        #decisions
+        self.current_speed = 0
+        self.current_rotation_speed = 0
+
+
+
+
+
+
+
+
         if not neural_matrix:
             self.neural_matrix = []
             self.neural_matrix.append(np.random.uniform(-1, 1, self.neurons_number_in_layer,  self.intelegence))
             for i in range(self.layers_number-2):
                 self.neural_matrix.append(np.random.uniform(-1, 1, self.neurons_number_in_layer, self.neurons_number_in_layer))
             self.neural_matrix.append(np.random.uniform(-1, 1, self.neurons_number_in_layer, 1)) #only direction for now
-
-        self.d_food = 100   # distance to nearest food
-        self.r_food = 0     # orientation to nearest food
 
 
 
