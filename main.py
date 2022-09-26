@@ -7,7 +7,11 @@ from math import cos
 from math import radians
 from math import sin
 from random import uniform
-
+settings = {
+    "default_size":10,
+    "default_speed":0.01,
+    "max_energy":5,
+    }
 class organism():
     def __init__(self, settings, neural_matrix = None, name=None):
 
@@ -16,9 +20,9 @@ class organism():
 
         self.r = uniform(0,360)                 # orientation   [0, 360]
 
-        self.speed = 0.01
+        self.speed = settings["default_speed"]
         self.v = self.speed
-        self.size = 10
+        self.size = settings["default_size"]
         self.health = self.size
         self.food_count = self.size/2  # fitness (food count)
         self.layers_number = 2
@@ -79,7 +83,7 @@ class food():
     def __init__(self, settings):
         self._x = uniform(settings['x_min'], settings['x_max'])
         self._y = uniform(settings['y_min'], settings['y_max'])
-        self._energy = random.randint(1,5)
+        self._energy = random.randint(1,settings["max_energy"])
 
     def _get_energy(self):
         return self._radius
