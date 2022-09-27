@@ -2,6 +2,7 @@ from __future__ import division, print_function
 
 from time import sleep
 
+import numpy
 import numpy as np
 
 from math import cos, sqrt, degrees, atan2
@@ -44,7 +45,7 @@ def dist(x1, y1, x2, y2):
 def calc_heading(org, food):
     d_x = food.x - org.x
     d_y = food.y - org.y
-    theta_d = degrees(atan2(d_y, d_x)) - org.r
+    theta_d = degrees(atan2(d_y, d_x)) - org.current_direction
     if abs(theta_d) > 180: theta_d += 360
     return theta_d / 180
 
@@ -69,66 +70,76 @@ class organism():
         self.current_direction = 0
 
         # neural settings
-        self.layers_number = 2
-        self.neurons_number_in_layer = 5
+        self.layers_number = 4
+        self.neurons_number_in_layer = 3
         self.name = name
         self.intelegence = 2
-        self.dexterity = 5
+        self.max_rot_speed = 15
+        self.max_move_speed = 2
         self.neural_matrix = neural_matrix
 
         # features
         self.features_dict = full_features_dict
-
+        self.features_list = []
         # decisions
         self.current_speed = 0
         self.current_rotation_speed = 0
         self.desired_direction = 0
 
         self.decisions_dict = decisions_dict
-
+        self.neural_matrix = []
         if not neural_matrix:
             self.neural_matrix = []
-            self.neural_matrix.append(np.random.uniform(-1, 1, self.neurons_number_in_layer, len(self.features_dict)))
+            self.neural_matrix.append(np.random.uniform(-1, 1, (len(self.features_dict), self.neurons_number_in_layer)))
             for i in range(self.layers_number - 2):
                 self.neural_matrix.append(
-                    np.random.uniform(-1, 1, self.neurons_number_in_layer, self.neurons_number_in_layer))
+                    np.random.uniform(-1, 1, (self.neurons_number_in_layer, self.neurons_number_in_layer)))
             self.neural_matrix.append(
-                np.random.uniform(-1, 1, self.neurons_number_in_layer, len(decisions_dict)))  # only direction for now
+                np.random.uniform(-1, 1, (self.neurons_number_in_layer, len(decisions_dict))))
 
     # NEURAL NETWORK
-    def think(self, feature_vector):
+    def think(self):
 
         # SIMPLE MLP
-        af = lambda x: np.tanh(x)  # activation function
-        feature_slice = feature_vector[0:self.intelegence]
-        hl = af(np.dot(self.neural_matrix[0], self.r_food))
-        for i in range(1, len(self.neural_matrix) - 2):
-            hl = af(np.dot(self.neural_matrix[i], hl))
-        out = af(np.dot(np.dot(self.neural_matrix[self.neural_matrix[-1]], hl)))
-        self.current_speed = out[0]
-        self.current_rotation_speed = out[1]
-        self.desired_direction = out[2]
+        if len(self.features_list) > 0:
+            list_of_features = numpy.array(self.features_list)
+            af = lambda x: np.tanh(x)  # activation function
+            hl = af(np.dot(list_of_features, self.neural_matrix[0]))
+            for matr in self.neural_matrix[1:]:
+                hl = af(np.dot(hl, matr))
+            out = hl.reshape(3, )  # af(np.dot(hl, self.neural_matrix[len(self.neural_matrix)-1]))
+            self.current_speed = out[0]
+            self.current_rotation_speed = out[1]
+            self.desired_direction = out[2]
+        else:
+            self.current_speed = uniform(0, self.max_move_speed)
+            self.current_rotation_speed = uniform(0, self.max_rot_speed)
+            self.desired_direction = random.randint(0, 360)
 
     # UPDATE HEADING
+
     def update_r(self):
-        if self.current_rotation_speed > 2:
-            self.current_rotation_speed = self.dexterity
-        if self.current_rotation_speed < -2:
-            self.current_rotation_speed = -self.dexterity
+        if self.current_rotation_speed > self.max_rot_speed:
+            self.current_rotation_speed = self.max_rot_speed
+        if self.current_rotation_speed < -self.max_rot_speed:
+            self.current_rotation_speed = -self.max_rot_speed
+
         self.current_direction += self.current_rotation_speed
         self.current_direction = self.current_rotation_speed
 
         self.current_direction = self.current_direction % 360
 
     # UPDATE VELOCITY
-    def update_vel(self, settings):
-        # self.v += self.nn_dv * settings['dv_max'] * settings['dt']
-        # if self.v < 0: self.v = 0
-        # if self.v > settings['v_max']: self.v = settings['v_max']
-        self.v = self.speed
+    def update_vel(self):
+        if self.current_speed > self.max_move_speed:
+            self.current_speed = self.max_move_speed
+        if self.current_speed < -self.max_move_speed:
+            self.current_speed = -self.max_move_speed
+
+        self.v = self.current_speed
 
     # UPDATE POSITION
-    def update_pos(self, settings):
+    def update_pos(self):
         dx = self.v * cos(radians(self.current_direction))
         dy = self.v * sin(radians(self.current_direction))
         self.x += dx
@@ -136,19 +147,10 @@ class organism():
 
 
 class food_f():
-    def __init__(self, settings):
-        self._x = uniform(settings['x_min'], settings['x_max'])
-        self._y = uniform(settings['y_min'], settings['y_max'])
-        self._energy = random.randint(1, settings["max_energy"])
-
-    def _get_energy(self):
-        return self._energy
-
-    def _get_x(self):
-        return self._x
-
-    def _get_y(self):
-        return self._y
+    def __init__(self):
+        self.x = uniform(0, settings['field_x'])
+        self.y = uniform(0, settings['field_y'])
+        self.energy = random.randint(1, settings["max_energy"])
 
 
 def simulate(organisms, foods_list):
@@ -161,29 +163,32 @@ def simulate(organisms, foods_list):
             if food_org_dist <= 0.075:
                 org.food_count += food.energy
 
-            # RESET DISTANCE AND HEADING TO NEAREST FOOD SOURCE
-            org.d_food = 100
-            org.r_food = 0
-
     for org in organisms:
         org.food_count -= 0.1
-        if food.food_count <= 0:
+        if food.energy <= 0:
             organisms.remove(org)
 
-    for food in foods_list:
-        if food.energy <= 0:
-            foods.remove(food)
+    for fd in foods_list:
+        if fd.energy <= 0:
+            foods.remove(fd)
+            foods.append(food_f())
+
     # CALCULATE HEADING TO NEAREST FOOD SOURCE
+    def number_of_org_around_food(f):
+        cnt = 0
+        for org in organisms:
+            if dist(org.x, org.y, f.x, f.y) < 2:
+                cnt += 1
+        return cnt
+
     for food in foods_list:
         for org in organisms:
 
-            # CALCULATE DISTANCE TO SELECTED FOOD PARTICLE
+            # CALCULATE VECTORS
             food_org_dist = dist(org.x, org.y, food.x, food.y)
-
-            # DETERMINE IF THIS IS THE CLOSEST FOOD PARTICLE
-            if food_org_dist < org.d_food:
-                org.d_food = food_org_dist
-                org.r_food = calc_heading(org, food)
+            org.features_list = []
+            if food_org_dist < org.vision_range:
+                org.features_list.append(list[food_org_dist, food.energy, number_of_org_around_food(food)])
 
     # GET ORGANISM RESPONSE
     for org in organisms:
@@ -191,29 +196,29 @@ def simulate(organisms, foods_list):
 
     # UPDATE ORGANISMS POSITION AND VELOCITY
     for org in organisms:
-        org.update_r(settings)
-        org.update_vel(settings)
-        org.update_pos(settings)
-
-    return organisms
+        org.update_r()
+        org.update_vel()
+        org.update_pos()
 
 
 def plot_frame(organisms, foods):
     plt.clf()
     # PLOT ORGANISMS
+    fig, ax = plt.subplots()
+    fig.set_size_inches(9.6, 5.4)
     for organism in organisms:
-        circle = Circle([organisms.x, organisms.y], 0.05, edgecolor='g', facecolor='lightgreen', zorder=8)
+        circle = Circle([organism.x, organism.y], 0.05, edgecolor='g', facecolor='lightgreen', zorder=8)
         ax.add_artist(circle)
 
-        edge = Circle([organisms.x, organisms.y], 0.05, facecolor='None', edgecolor='darkgreen', zorder=8)
+        edge = Circle([organism.x, organism.y], 0.05, facecolor='None', edgecolor='darkgreen', zorder=8)
         ax.add_artist(edge)
 
         tail_len = 0.075
 
-        x2 = cos(radians(organisms.current_direction)) * tail_len + organisms.x
-        y2 = sin(radians(organisms.current_direction)) * tail_len + organisms.y
+        x2 = cos(radians(organism.current_direction)) * tail_len + organism.x
+        y2 = sin(radians(organism.current_direction)) * tail_len + organism.y
 
-        ax.add_line(lines.Line2D([organisms.x, x2], [organisms.y, y2], color='darkgreen', linewidth=1, zorder=10))
+        ax.add_line(lines.Line2D([organism.x, x2], [organism.y, y2], color='darkgreen', linewidth=1, zorder=10))
 
     # PLOT FOOD PARTICLES
     for food in foods:
@@ -230,10 +235,10 @@ def plot_frame(organisms, foods):
     plt.show()
 
 
-amebas = [organism(x) for x in range(1,10)]
-foods = [food_f() for x in range(1,100)]
+amebas = [organism(x) for x in range(1, 100)]
+foods = [food_f() for x in range(1, 1000)]
 
 while True:
-    simulate(amebas,foods)
-    plot_frame(amebas.food)
+    simulate(amebas, foods)
+    plot_frame(amebas, foods)
     sleep(1.0)
