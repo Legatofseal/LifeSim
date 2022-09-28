@@ -18,13 +18,13 @@ from plotting import plot_food
 from plotting import plot_organism
 
 from matplotlib import pyplot as plt, lines
-
+from collections import Counter
 settings = {
     "default_size": 10,
     "default_speed": 0.01,
     "max_energy": 5,
-    "field_x": 100,
-    "field_y": 100,
+    "field_x": 10,
+    "field_y": 10,
     "max_speed": 2,
 
 }
@@ -102,7 +102,8 @@ class organism():
 
         # SIMPLE MLP
         if len(self.features_list) > 0:
-            list_of_features = numpy.array(self.features_list)
+            list_of_features = numpy.array(self.features_list).reshape(1,3)
+
             af = lambda x: np.tanh(x)  # activation function
             hl = af(np.dot(list_of_features, self.neural_matrix[0]))
             for matr in self.neural_matrix[1:]:
@@ -188,8 +189,7 @@ def simulate(organisms, foods_list):
             food_org_dist = dist(org.x, org.y, food.x, food.y)
             org.features_list = []
             if food_org_dist < org.vision_range:
-                org.features_list.append(list[food_org_dist, food.energy, number_of_org_around_food(food)])
-
+                org.features_list.append([food_org_dist, food.energy, number_of_org_around_food(food)])
     # GET ORGANISM RESPONSE
     for org in organisms:
         org.think()
@@ -236,9 +236,10 @@ def plot_frame(organisms, foods):
 
 
 amebas = [organism(x) for x in range(1, 100)]
-foods = [food_f() for x in range(1, 1000)]
+foods = [food_f() for x in range(1, 100)]
 
 while True:
     simulate(amebas, foods)
-    plot_frame(amebas, foods)
-    sleep(1.0)
+    #plot_frame(amebas, foods)
+    print(1)
+    #sleep(1.0)
