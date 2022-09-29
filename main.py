@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 
-from time import sleep
+from time import sleep, time
 
 import numpy
 import numpy as np
@@ -11,7 +11,7 @@ from math import sin
 from random import uniform
 from collections import OrderedDict
 import random
-
+from time import sleep
 from matplotlib.patches import Circle
 
 from plotting import plot_food
@@ -19,12 +19,13 @@ from plotting import plot_organism
 
 from matplotlib import pyplot as plt, lines
 from collections import Counter
+
 settings = {
-    "default_size": 10,
+    "default_size": 120,
     "default_speed": 0.01,
     "max_energy": 5,
-    "field_x": 10,
-    "field_y": 10,
+    "field_x": 2,
+    "field_y": 2,
     "max_speed": 2,
 
 }
@@ -87,6 +88,8 @@ class organism():
         self.desired_direction = 0
 
         self.decisions_dict = decisions_dict
+
+        self.mut_factor = 10
         self.neural_matrix = []
         if not neural_matrix:
             self.neural_matrix = []
@@ -96,13 +99,24 @@ class organism():
                     np.random.uniform(-1, 1, (self.neurons_number_in_layer, self.neurons_number_in_layer)))
             self.neural_matrix.append(
                 np.random.uniform(-1, 1, (self.neurons_number_in_layer, len(decisions_dict))))
+        else:
+            self.neural_matrix = neural_matrix
+
+    def mutate(self):
+
+        n_neural = []
+        for m in self.neural_matrix:
+            n_neural.append(m * (1 + uniform(-self.mut_factor, self.mut_factor)))
+        n = organism(10000 + self.number, n_neural)
+        n.food_count = self.size / 2  # fitness (food count)
+        return n
 
     # NEURAL NETWORK
     def think(self):
 
         # SIMPLE MLP
         if len(self.features_list) > 0:
-            list_of_features = numpy.array(self.features_list).reshape(1,3)
+            list_of_features = numpy.array(self.features_list).reshape(1, 3)
 
             af = lambda x: np.tanh(x)  # activation function
             hl = af(np.dot(list_of_features, self.neural_matrix[0]))
@@ -156,40 +170,42 @@ class food_f():
 
 def simulate(organisms, foods_list):
     # UPDATE FITNESS FUNCTION
-    for food in foods_list:
-        for org in organisms:
+
+    for org in organisms:
+        for food in foods_list:
             food_org_dist = dist(org.x, org.y, food.x, food.y)
 
             # UPDATE FITNESS FUNCTION
             if food_org_dist <= 0.075:
                 org.food_count += food.energy
+                foods_list.remove(food)
+                break
 
     for org in organisms:
-        org.food_count -= 0.1
-        if food.energy <= 0:
+        org.food_count -= 2
+        if org.food_count <= 0:
             organisms.remove(org)
+        if org.food_count >= (org.size * 3 / 4):
+            organisms.append(org.mutate())
 
-    for fd in foods_list:
-        if fd.energy <= 0:
-            foods.remove(fd)
-            foods.append(food_f())
+    for fd in range(0, 15):
+        foods_list.append(food_f())
 
     # CALCULATE HEADING TO NEAREST FOOD SOURCE
     def number_of_org_around_food(f):
-        cnt = 0
-        for org in organisms:
-            if dist(org.x, org.y, f.x, f.y) < 2:
-                cnt += 1
-        return cnt
+        cnt_l = 0
+        for org_l in organisms:
+            if dist(org_l.x, org_l.y, f.x, f.y) < 2:
+                cnt_l += 1
+        return cnt_l
 
     for food in foods_list:
         for org in organisms:
-
-            # CALCULATE VECTORS
             food_org_dist = dist(org.x, org.y, food.x, food.y)
             org.features_list = []
             if food_org_dist < org.vision_range:
                 org.features_list.append([food_org_dist, food.energy, number_of_org_around_food(food)])
+
     # GET ORGANISM RESPONSE
     for org in organisms:
         org.think()
@@ -235,11 +251,72 @@ def plot_frame(organisms, foods):
     plt.show()
 
 
-amebas = [organism(x) for x in range(1, 100)]
-foods = [food_f() for x in range(1, 100)]
+amebas = [organism(x) for x in range(1, 50)]
+foods = [food_f() for x in range(1, 1200)]
+'''
+x = [10]
+y = [10]
 
-while True:
+plt.ion()
+
+figure, ax = plt.subplots(figsize=(8, 8))
+line1, = ax.plot(x, y)
+
+plt.title("Dynamic Plot of sinx", fontsize=25)
+
+plt.xlabel("X", fontsize=18)
+plt.ylabel("sinX", fontsize=18)
+circle = Circle([1, 1], 0.05, edgecolor='g', facecolor='lightgreen', zorder=8)
+'''
+cnt = 0
+yx = [[] for i in range(10)]
+cnts = [0 for i in range(10)]
+
+steps = 1000
+x = [a for a in range(0, steps)]
+step_count = 0
+while len(amebas) > 0 and step_count < steps:
+    cnts = [0 for i in range(10)]
+    random.shuffle(amebas)
     simulate(amebas, foods)
-    #plot_frame(amebas, foods)
-    print(1)
-    #sleep(1.0)
+    step_count += 1
+
+    '''
+   
+    circle = Circle([50, 50], 0.05, edgecolor='g', facecolor='lightgreen', zorder=8)
+    for o in amebas:
+        circle = Circle([o.x, o.y], 0.05, edgecolor='g', facecolor='lightgreen', zorder=8)
+        ax.add_artist(circle)
+
+        edge = Circle([o.x, o.y], 0.05, facecolor='None', edgecolor='darkgreen', zorder=8)
+        ax.add_artist(edge)
+
+
+    figure.canvas.draw()
+
+    figure.canvas.flush_events()
+    '''
+    # plot_frame(amebas, foods)
+    for a in amebas:
+        cnts[a.number // 10000] += 1
+    for i in range(len(yx)):
+        yx[i].append(cnts[i])
+
+    sleep(0.1)
+
+    data_str = "_".join(map(str, cnts))
+    data_str = f"{step_count}_{len(amebas)}_{len(foods)}:::{data_str}"
+    print(data_str)
+
+# Function to plot
+plt.figure(figsize=(10, 10))
+for i in range(len(yx)):
+    if max(yx[i]) > 0:
+        plt.plot(x[0:len(yx[i])], yx[i], label=f"gen{i + 1}")
+
+# Function add a legend
+# plt.legend(["gen1", "gen2","gen3", "gen4", "gen5", "gen6", "gen7", "gen8", "gen9", "gen10"], loc="lower right")
+plt.legend()
+plt.title(f"Amebas Generations for {steps} steps")
+# function to show the plot
+plt.show()
