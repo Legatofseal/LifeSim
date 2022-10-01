@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-settings = {
+settings_game = {
     "default_size": 50,
     "default_speed": 0.01,
     "max_energy": 10,
@@ -10,10 +10,11 @@ settings = {
     "feed_distance": 0.035,
     "amebas_number": 6,
     "food_number": 50,
-    "max_steps": 1200,
+    "max_steps": 10000,
     "step_energy_drain": 0.5,
-    "food_update": 10,
-    "mut_factor": 10,
+    "food_update": 1,
+    "mut_factor": 5,
+    "image_folder": "images",
 
 }
 full_features_dict = OrderedDict([("food_distance", 0), ("food_size", 0), ("org_around_food", 0)])

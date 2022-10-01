@@ -1,12 +1,14 @@
 from math import radians, sin
-from random import uniform, random
+from random import uniform
 import numpy as np
 from numpy import cos
-import settings
+from settings import settings_game
 from abc import abstractmethod
+import random
+from sources import settings
 
 
-class life():
+class life:
     def __init__(self, num: int, neural_matrix=None, name=None):
         # position
         self.x = 0
@@ -15,9 +17,11 @@ class life():
 
         # organism properties
         self.number = 0
+        self.ready_for_sex = 0
         self.speed = 0
         self.v = 0
         self.size = 0
+        self.ready_for_sex =0
         self.food_count = self.size / 2  # fitness (food count)
         self.d_food = 0
         self.r_food = 0  # orientation to nearest food
@@ -47,16 +51,7 @@ class life():
         self.neural_matrix = []
 
         self.generation = 1
-        if not neural_matrix:
-            self.neural_matrix = []
-            self.neural_matrix.append(np.random.uniform(-1, 1, (len(self.features_dict), self.neurons_number_in_layer)))
-            for i in range(self.layers_number - 2):
-                self.neural_matrix.append(
-                    np.random.uniform(-1, 1, (self.neurons_number_in_layer, self.neurons_number_in_layer)))
-            self.neural_matrix.append(
-                np.random.uniform(-1, 1, (self.neurons_number_in_layer, len(settings.decisions_dict))))
-        else:
-            self.neural_matrix = neural_matrix
+
 
     @abstractmethod
     def mutate(self):
@@ -82,19 +77,18 @@ class life():
 class organism(life):
     def __init__(self, num: int, neural_matrix=None, name=None):
         # position
-        self.x = uniform(0, settings['field_x'])  # position (x)
-        self.y = uniform(0, settings['field_y'])  # position (y)
+        self.x = uniform(0, settings_game['field_x'])  # position (x)
+        self.y = uniform(0, settings_game['field_y'])  # position (y)
         # direction
 
         # organism properties
         self.number = num
-        self.speed = settings["default_speed"]
+        self.speed = settings_game["default_speed"]
         self.v = self.speed
-        self.size = settings["default_size"]
+        self.size = settings_game["default_size"]
         self.health = self.size
         self.food_count = self.size / 2  # fitness (food count)
-        self.d_food = 100  # distance to nearest food
-        self.r_food = 0  # orientation to nearest food
+        self.ready_for_sex = 3/4
         self.vision_range = 1
         self.current_direction = 0
 
@@ -110,14 +104,10 @@ class organism(life):
         # features
         self.features_dict = settings.full_features_dict
         self.features_list = []
-        # decisions
-        self.current_speed = 0
-        self.current_rotation_speed = 0
-        self.desired_direction = 0
 
         self.decisions_dict = settings.decisions_dict
 
-        self.mut_factor = settings["mut_factor"]
+        self.mut_factor = settings_game["mut_factor"]
         self.neural_matrix = []
 
         self.generation = 1
@@ -164,6 +154,10 @@ class organism(life):
             self.current_speed = uniform(0, self.max_move_speed)
             self.current_rotation_speed = uniform(0, self.max_rot_speed)
             self.desired_direction = random.randint(0, 360)
+
+        self.update_r()
+        self.update_vel()
+        self.update_pos()
 
     # UPDATE HEADING
 
