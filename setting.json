@@ -1,0 +1,1 @@
+"{\n    \"default_size\": 50,\n    \"default_speed\": 0.01,\n    \"max_energy\": 10,\n    \"field_x\": 1,\n    \"field_y\": 1,\n    \"max_speed\": 2,\n    \"feed_distance\": 0.035,\n    \"amebas_number\": 6,\n    \"food_number\": 50,\n    \"max_steps\": 10000,\n    \"step_energy_drain\": 0.5,\n    \"food_update\": 1,\n    \"mut_factor\": 5,\n    \"image_folder\": \"images\"\n}"

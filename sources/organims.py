@@ -1,27 +1,32 @@
+# pylint: disable=missing-module-docstring
+# pylint: disable=missing-class-docstring
+# pylint: disable=missing-function-docstring
+# pylint: disable=line-too-long, too-many-instance-attributes
+import random
 from math import radians, sin
 from random import uniform
+from abc import abstractmethod
 import numpy as np
 from numpy import cos
-from settings import settings_game
-from abc import abstractmethod
-import random
-from sources import settings
+import settings
 
 
-class life:
+
+class Life:
     def __init__(self, num: int, neural_matrix=None, name=None):
         # position
-        self.x = 0
-        self.y = 0
+        self.position_x = 0
+        self.position_y = 0
+        self.number = num
         # direction
 
         # organism properties
         self.number = 0
         self.ready_for_sex = 0
         self.speed = 0
-        self.v = 0
+        self.velocity = 0
         self.size = 0
-        self.ready_for_sex =0
+        self.ready_for_sex = 0
         self.food_count = self.size / 2  # fitness (food count)
         self.d_food = 0
         self.r_food = 0  # orientation to nearest food
@@ -32,7 +37,7 @@ class life:
         self.layers_number = 0
         self.neurons_number_in_layer = 0
         self.name = name
-        self.intelegence = 0
+
         self.max_rot_speed = 0
         self.max_move_speed = 0
         self.neural_matrix = neural_matrix
@@ -52,9 +57,8 @@ class life:
 
         self.generation = 1
 
-
     @abstractmethod
-    def mutate(self):
+    def mutate(self, sett):
         return
 
     @abstractmethod
@@ -74,21 +78,23 @@ class life:
         return
 
 
-class organism(life):
-    def __init__(self, num: int, neural_matrix=None, name=None):
+class Organism(Life):
+    def __init__(self, num: int,
+                 sett, neural_matrix=None, name=None):
+        super().__init__(num)
         # position
-        self.x = uniform(0, settings_game['field_x'])  # position (x)
-        self.y = uniform(0, settings_game['field_y'])  # position (y)
+        self.position_x = uniform(0, int(sett['field_x']))  # position (x)
+        self.position_y = uniform(0, int(sett['field_y']))  # position (y)
         # direction
 
         # organism properties
         self.number = num
-        self.speed = settings_game["default_speed"]
-        self.v = self.speed
-        self.size = settings_game["default_size"]
+        self.speed = int(sett["default_speed"])
+        self.velocity = self.speed
+        self.size = int(sett["default_size"])
         self.health = self.size
         self.food_count = self.size / 2  # fitness (food count)
-        self.ready_for_sex = 3/4
+        self.ready_for_sex = 3 / 4
         self.vision_range = 1
         self.current_direction = 0
 
@@ -96,7 +102,6 @@ class organism(life):
         self.layers_number = 4
         self.neurons_number_in_layer = 3
         self.name = name
-        self.intelegence = 2
         self.max_rot_speed = 15
         self.max_move_speed = 0.02
         self.neural_matrix = neural_matrix
@@ -107,14 +112,14 @@ class organism(life):
 
         self.decisions_dict = settings.decisions_dict
 
-        self.mut_factor = settings_game["mut_factor"]
+        self.mut_factor = int(sett["mut_factor"])
         self.neural_matrix = []
 
         self.generation = 1
         if not neural_matrix:
             self.neural_matrix = []
             self.neural_matrix.append(np.random.uniform(-1, 1, (len(self.features_dict), self.neurons_number_in_layer)))
-            for i in range(self.layers_number - 2):
+            for _ in range(self.layers_number - 2):
                 self.neural_matrix.append(
                     np.random.uniform(-1, 1, (self.neurons_number_in_layer, self.neurons_number_in_layer)))
             self.neural_matrix.append(
@@ -122,31 +127,33 @@ class organism(life):
         else:
             self.neural_matrix = neural_matrix
 
-    def mutate(self):
+    def mutate(self, sett):
 
         n_neural = []
-        for m in self.neural_matrix:
-            n_neural.append(m * (1 + uniform(-self.mut_factor / 100, self.mut_factor / 100)))
-        n = organism(10000 + self.number, n_neural)
-        n.x = self.x + uniform(-0.05, 0.05)
-        n.y = self.y + uniform(-0.05, 0.05)
-        n.food_count = self.size / 2  # fitness (food count)
+        for matrix in self.neural_matrix:
+            n_neural.append(matrix * (1 + uniform(-self.mut_factor / 100, self.mut_factor / 100)))
+        new_org = Organism(10000 + self.number, sett=sett, neural_matrix=n_neural)
+        new_org.position_x = self.position_x + uniform(-0.05, 0.05)
+        new_org.position_y = self.position_y + uniform(-0.05, 0.05)
+        new_org.food_count = self.size / 2  # fitness (food count)
         self.food_count = self.size / 2  # fitness (food count)
-        n.generation = self.generation + 1
-        return n
+        new_org.generation = self.generation + 1
+        return new_org
 
     # NEURAL NETWORK
     def think(self):
 
+        def activation(value):
+            return np.tanh(value)
         # SIMPLE MLP
         if len(self.features_list) > 0:
             list_of_features = np.array(self.features_list).reshape(1, 3)
 
-            af = lambda x: np.tanh(x)  # activation function
-            hl = af(np.dot(list_of_features, self.neural_matrix[0]))
+            activation_func = activation  # activation function
+            hidden_layer = activation_func(np.dot(list_of_features, self.neural_matrix[0]))
             for matr in self.neural_matrix[1:]:
-                hl = af(np.dot(hl, matr))
-            out = hl.reshape(3, )  # af(np.dot(hl, self.neural_matrix[len(self.neural_matrix)-1]))
+                hidden_layer = activation_func(np.dot(hidden_layer, matr))
+            out = hidden_layer.reshape(3, )  # af(np.dot(hl, self.neural_matrix[len(self.neural_matrix)-1]))
             self.current_speed = out[0]
             self.current_rotation_speed = out[1]
             self.desired_direction = out[2]
@@ -179,19 +186,19 @@ class organism(life):
         if self.current_speed < -self.max_move_speed:
             self.current_speed = -self.max_move_speed
 
-        self.v = self.current_speed
+        self.velocity = self.current_speed
 
     # UPDATE POSITION
     def update_pos(self):
-        dx = self.v * cos(radians(self.current_direction))
-        dy = self.v * sin(radians(self.current_direction))
-        self.x += dx
-        self.y += dy
-        if self.x > 1:
-            self.x -= 1
-        if self.y > 1:
-            self.y -= 1
-        if self.x < 0:
-            self.x += 1
-        if self.y < 0:
-            self.y += 1
+        delta_x = self.velocity * cos(radians(self.current_direction))
+        delta_y = self.velocity * sin(radians(self.current_direction))
+        self.position_x += delta_x
+        self.position_y += delta_y
+        if self.position_x > 1:
+            self.position_x -= 1
+        if self.position_y > 1:
+            self.position_y -= 1
+        if self.position_x < 0:
+            self.position_x += 1
+        if self.position_y < 0:
+            self.position_y += 1
