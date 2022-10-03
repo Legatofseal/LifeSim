@@ -7,12 +7,14 @@ from __future__ import division, print_function
 import json
 import os
 import shutil
+import argparse
 from matplotlib import pyplot as plt
 from food import Food
 from organims import Organism
 from settings import settings_game_default
 from utils import create_video, dist
 from sources.ploting import plot
+
 
 
 # pylint: disable=too-many-instance-attributes
@@ -29,9 +31,9 @@ class GameManager:
             self.sett = sett
 
         if write_settings_to_file:
-            json_object = json.dumps(self.sett, indent=4)
+
             with open("setting.json", "w", encoding="utf-8") as outfile:
-                json.dump(json_object, outfile)
+                json.dump(self.sett, outfile, indent=4)
 
         if not os.path.exists(self.sett["image_folder"]):
             os.makedirs(self.sett["image_folder"])
@@ -89,7 +91,11 @@ class GameManager:
         create video from set of images after games end
         :return: nothing
         """
-        create_video(self.sett["image_folder"])
+        try:
+            create_video(self.sett["image_folder"])
+        except IndexError as err:
+            print(f"Error while video creating : {err}")
+
 
     def simulate(self, organisms, foods_list):
         """
@@ -146,7 +152,21 @@ def main():
     Create Manager instanse and start the game
     :return: nothing
     """
-    manager = GameManager()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--settings", help="json file with settings")
+    args = parser.parse_args()
+
+    manager = None
+    if args.settings:
+        try:
+            with open(args.settings, "r", encoding="utf-8") as file_sett:
+                manager = GameManager(json.load(file_sett))
+        except FileNotFoundError as error:
+            print(f"Can not open settings file : {error} ")
+
+    if not manager:
+        manager = GameManager()
+
     manager.start()
     manager.create_video_after_game()
 

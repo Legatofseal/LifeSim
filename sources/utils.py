@@ -43,8 +43,8 @@ def create_video(folder, list_images=None):
     :return: nothing
     """
     # Function to plot
+    img_array = []
     if not list_images:
-        img_array = []
         for filename in glob.glob(f'{folder}/*.png'):
             img = cv2.imread(filename)
             height, width, _ = img.shape
@@ -55,8 +55,8 @@ def create_video(folder, list_images=None):
         img_array = list_images
     out = cv2.VideoWriter('project.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
 
-    for _ in range(len(img_array)):
-        out.write(img_array[i])
+    for img in range(img_array):
+        out.write(img)
     out.release()
 
 

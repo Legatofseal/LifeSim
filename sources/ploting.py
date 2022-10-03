@@ -40,8 +40,8 @@ def plot(ax_local, amebas, foods, step_count, gen_num, yx_local, folder):
         circle = Circle([f_data.position_x, f_data.position_y], 0.005,
                         edgecolor='darkslateblue', facecolor='mediumslateblue', zorder=5)
         ax_local.add_artist(circle)
-    for data, i in enumerate(yx_local):
-        data[i].append(cnts[i])
+    for i in range(len(yx_local)):
+        yx_local[i].append(cnts[i])
 
     plt.savefig(f"{folder}/" + str(step_count).zfill(6) + '.png', dpi=100)
     return cnts
