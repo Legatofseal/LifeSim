@@ -5,16 +5,13 @@ Main file
 from __future__ import division, print_function
 
 import json
-import os
-import shutil
 import argparse
 from matplotlib import pyplot as plt
 from food import Food
 from organims import Organism
 from settings import settings_game_default
-from utils import create_video, dist
+from utils import create_video, dist, create_folder
 from sources.ploting import plot
-
 
 
 # pylint: disable=too-many-instance-attributes
@@ -23,6 +20,7 @@ class GameManager:
     """
     GameManager is responsible for the game. Put settings and start
     """
+
     def __init__(self, sett=None, write_settings_to_file=False):
 
         if not sett:
@@ -31,22 +29,10 @@ class GameManager:
             self.sett = sett
 
         if write_settings_to_file:
-
             with open("setting.json", "w", encoding="utf-8") as outfile:
                 json.dump(self.sett, outfile, indent=4)
 
-        if not os.path.exists(self.sett["image_folder"]):
-            os.makedirs(self.sett["image_folder"])
-
-        for filename in os.listdir(self.sett["image_folder"]):
-            file_path = os.path.join(self.sett["image_folder"], filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path):
-                    shutil.rmtree(file_path)
-            except FileNotFoundError as exep:
-                print(f'Failed to delete {file_path}. Reason: {exep}')
+        create_folder(self.sett["image_folder"])
 
         self.fig, self.ax_plot = plt.subplots()
         self.fig.set_size_inches(9.6, 9.6)
@@ -96,7 +82,6 @@ class GameManager:
         except IndexError as err:
             print(f"Error while video creating : {err}")
 
-
     def simulate(self, organisms, foods_list):
         """
         :param organisms: list of organizms
@@ -105,9 +90,7 @@ class GameManager:
         """
         for org in organisms:
             for food in foods_list:
-                food_org_dist = dist(org.position_x, org.position_y,
-                                     food.position_x, food.position_y)
-
+                food_org_dist = dist(org,food)
                 if food_org_dist <= self.sett["feed_distance"]:
                     org.food_count += food.energy
                     foods_list.remove(food)
@@ -136,8 +119,7 @@ class GameManager:
         for food in foods_list:
             food_num = number_of_org_around_food(food)
             for org in organisms:
-                food_org_dist = dist(org.position_x, org.position_y,
-                                     food.position_x, food.position_y)
+                food_org_dist = dist(org,food)
                 org.features_list = []
                 if food_org_dist < org.vision_range:
                     org.features_list.append([food_org_dist, food.energy, food_num])
@@ -149,7 +131,7 @@ class GameManager:
 
 def main():
     """
-    Create Manager instanse and start the game
+    Create Manager instance and start the game
     :return: nothing
     """
     parser = argparse.ArgumentParser()
@@ -157,12 +139,17 @@ def main():
     args = parser.parse_args()
 
     manager = None
+
     if args.settings:
         try:
             with open(args.settings, "r", encoding="utf-8") as file_sett:
                 manager = GameManager(json.load(file_sett))
+
         except FileNotFoundError as error:
-            print(f"Can not open settings file : {error} ")
+            print(f"Can not open settings file : {error}. Loading default settings")
+
+        except json.decoder.JSONDecodeError as error:
+            print(f"Cannot convert json to dict : {error}. Loading default settings")
 
     if not manager:
         manager = GameManager()

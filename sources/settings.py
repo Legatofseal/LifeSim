@@ -18,8 +18,9 @@ settings_game_default = {
     "food_update": 2,
     "mut_factor": 5,
     "image_folder": "images",
+    "full_features_dict": OrderedDict([("food_distance", 0),
+                                       ("food_size", 0), ("org_around_food", 0)]),
+    "decisions_dict": OrderedDict([("current_speed", 0), ("current_rotation_speed", 0),
+                                   ("desired_direction", 0)]),
 
 }
-full_features_dict = OrderedDict([("food_distance", 0), ("food_size", 0), ("org_around_food", 0)])
-decisions_dict = OrderedDict([("current_speed", 0),("current_rotation_speed", 0),
-                              ("desired_direction", 0)])

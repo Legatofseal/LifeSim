@@ -8,12 +8,14 @@ from random import uniform
 from abc import abstractmethod
 import numpy as np
 from numpy import cos
-import settings
+
+from sources.Entity import Entity
 
 
+class Life(Entity):
 
-class Life:
     def __init__(self, num: int, neural_matrix=None, name=None):
+        super().__init__()
         # position
         self.position_x = 0
         self.position_y = 0
@@ -50,7 +52,7 @@ class Life:
         self.current_rotation_speed = 0
         self.desired_direction = 0
 
-        self.decisions_dict = settings.decisions_dict
+        self.decisions_dict = []
 
         self.mut_factor = 0
         self.neural_matrix = []
@@ -83,15 +85,16 @@ class Organism(Life):
                  sett, neural_matrix=None, name=None):
         super().__init__(num)
         # position
+        self.sett = sett
         self.position_x = uniform(0, int(sett['field_x']))  # position (x)
         self.position_y = uniform(0, int(sett['field_y']))  # position (y)
         # direction
 
         # organism properties
         self.number = num
-        self.speed = int(sett["default_speed"])
+        self.speed = int(self.sett["default_speed"])
         self.velocity = self.speed
-        self.size = int(sett["default_size"])
+        self.size = int(self.sett["default_size"])
         self.health = self.size
         self.food_count = self.size / 2  # fitness (food count)
         self.ready_for_sex = 3 / 4
@@ -107,12 +110,12 @@ class Organism(Life):
         self.neural_matrix = neural_matrix
 
         # features
-        self.features_dict = settings.full_features_dict
+        self.features_dict = self.sett["full_features_dict"]
         self.features_list = []
 
-        self.decisions_dict = settings.decisions_dict
+        self.decisions_dict = self.sett["decisions_dict"]
 
-        self.mut_factor = int(sett["mut_factor"])
+        self.mut_factor = int(self.sett["mut_factor"])
         self.neural_matrix = []
 
         self.generation = 1
@@ -123,7 +126,7 @@ class Organism(Life):
                 self.neural_matrix.append(
                     np.random.uniform(-1, 1, (self.neurons_number_in_layer, self.neurons_number_in_layer)))
             self.neural_matrix.append(
-                np.random.uniform(-1, 1, (self.neurons_number_in_layer, len(settings.decisions_dict))))
+                np.random.uniform(-1, 1, (self.neurons_number_in_layer, len(self.sett["decisions_dict"]))))
         else:
             self.neural_matrix = neural_matrix
 
@@ -145,6 +148,7 @@ class Organism(Life):
 
         def activation(value):
             return np.tanh(value)
+
         # SIMPLE MLP
         if len(self.features_list) > 0:
             list_of_features = np.array(self.features_list).reshape(1, 3)

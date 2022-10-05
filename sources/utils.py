@@ -3,9 +3,15 @@ utils for game
 """
 # pylint: disable=maybe-no-member
 import glob
+import os
+import shutil
 from math import degrees, atan2
 import random
 import cv2
+
+from sources.Entity import Entity
+
+NUM_OF_COLORS = 150
 
 colors = [
     "lightgreen",
@@ -28,11 +34,30 @@ def random_color():
     generate random color
     :return:
     """
-    return (random.random(), random.random(), random.random())
+    return random.random(), random.random(), random.random()
 
 
-for i in range(0, 150):
+for i in range(0, NUM_OF_COLORS):
     colors.append(random_color())
+
+
+def create_folder(folder):
+    """
+    Create folder or clear if exist
+    :param folder:
+    :return:
+    """
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except FileNotFoundError as exep:
+            print(f'Failed to delete {file_path}. Reason: {exep}')
 
 
 def create_video(folder, list_images=None):
@@ -55,24 +80,22 @@ def create_video(folder, list_images=None):
         img_array = list_images
     out = cv2.VideoWriter('project.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
 
-    for img in range(img_array):
+    for img in img_array:
         out.write(img)
     out.release()
 
 
-def dist(x_first, y_first, x_second, y_second):
+def dist(ent1: Entity, ent2: Entity):
     """
-    calculate distanse between two entities
-    :param x_first: x_first
-    :param y_first: y_first
-    :param x_second: x_second
-    :param y_second: y_second
-    :return: distance
-    """
-    return ((x_second - x_first) ** 2 + (y_second - y_first) ** 2) ** 0.5
+   :param ent1: first entity, food, organism etc
+   :param ent2: second entity, food, organism etc
+   :return: distance
+   """
+    return ((ent2.position_x - ent1.position_x) ** 2 +
+            (ent2.position_y - ent1.position_y) ** 2) ** 0.5
 
 
-def calc_heading(org, food):
+def calc_heading(org:Entity, food:Entity):
     """
     Calculate heading to food
     :param org: organism
