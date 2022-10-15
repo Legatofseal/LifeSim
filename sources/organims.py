@@ -197,43 +197,39 @@ class Organism(Life):
     # UPDATE HEADING
 
     def update_r(self):
-        '''
+        """
         if self.current_rotation_speed > self.max_rot_speed:
             self.current_rotation_speed = self.max_rot_speed
         if self.current_rotation_speed < -self.max_rot_speed:
             self.current_rotation_speed = -self.max_rot_speed
-        '''
-        #curspd_befor = self.current_rotation_speed
-        #cur_dic_before = self.current_direction
+        """
+
         self.current_rotation_speed = abs(self.current_rotation_speed) * self.max_rot_speed
         self.current_direction += self.current_rotation_speed
         self.current_direction = self.current_direction % 360
-        #print(f"{cur_dic_before}_{self.current_direction}_{self.current_rotation_speed}_{curspd_befor}")
 
     # UPDATE VELOCITY
-    #
     def update_vel(self):
         if self.current_speed > self.max_move_speed:
             self.current_speed = self.max_move_speed
-        #if self.current_speed < -self.max_move_speed:
-        #    self.current_speed = -self.max_move_speed
+
         if self.current_speed < 0:
             self.current_speed = 0
     # UPDATE POSITION
     def update_pos(self):
         delta_x = self.current_speed * cos(radians(self.current_direction))
         delta_y = self.current_speed * sin(radians(self.current_direction))
-        #print(f"{delta_x}_{delta_y}")
+
         self.position_x += delta_x
         self.position_y += delta_y
-        if self.position_x > 1:
-            self.position_x -= 1
-        if self.position_y > 1:
-            self.position_y -= 1
+        if self.position_x > self.sett["field_x"]:
+            self.position_x -= self.sett["field_x"]
+        if self.position_y > self.sett["field_y"]:
+            self.position_y -= self.sett["field_y"]
         if self.position_x < 0:
-            self.position_x += 1
+            self.position_x += self.sett["field_x"]
         if self.position_y < 0:
-            self.position_y += 1
+            self.position_y += self.sett["field_y"]
 
     def size_coef(self):
         return self.size / self.sett["default_size"]

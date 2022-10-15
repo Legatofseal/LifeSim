@@ -10,7 +10,7 @@ from utils import colors
 
 # pylint: disable=too-many-arguments
 # Reasonable in this case
-def plot(ax_local, amebas, foods, gen_num, yx_local, fig):
+def plot(ax_local, amebas, foods, gen_num, yx_local, fig, settings):
     """
     Function that save current state as image
     :param fig: figure to draw
@@ -24,6 +24,8 @@ def plot(ax_local, amebas, foods, gen_num, yx_local, fig):
     :return:
     """
     ax_local.clear()
+    ax_local.set_xlim([0, settings["field_x"]])
+    ax_local.set_ylim([0, settings["field_y"]])
     cnts = [0 for _ in range(gen_num)]
     for a_data in amebas:
         # pylint: disable=R0913
@@ -39,6 +41,7 @@ def plot(ax_local, amebas, foods, gen_num, yx_local, fig):
         ax_local.text(a_data.position_x - 0.005, a_data.position_y - 0.005,
                       str(a_data.generation), fontsize=6)
         cnts[a_data.number // 10000] += 1
+
     for f_data in foods:
         circle = Circle([f_data.position_x, f_data.position_y], 0.005,
                         edgecolor='darkslateblue', facecolor='mediumslateblue', zorder=5)

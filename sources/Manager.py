@@ -5,7 +5,7 @@ Manager file
 # pylint: disable=invalid-name
 # Reasonable in this case
 import json
-from random import random
+import random
 
 import cv2
 import numpy as np
@@ -43,10 +43,10 @@ class GameManager:
         create_folder(self.sett["image_folder"])
 
         self.fig, self.ax_plot = plt.subplots()
+        self.ax_plot.set_xlim([0, 2])
         self.fig.set_size_inches(9.6, 9.6)
 
-        plt.xlim(0, self.sett["field_x"])
-        plt.ylim(0, self.sett["field_y"])
+
 
         self.amebas = [Organism(x, self.sett,
                                 tag=f"{x}") for x in range(1, self.sett["amebas_number"])]
@@ -80,12 +80,13 @@ class GameManager:
                 self.simulate(self.amebas, self.foods)
                 counts, img = plot(self.ax_plot, self.amebas, self.foods,
                                    self.gen_num, self.counts_of_generation,
-                                   self.fig)
+                                   self.fig, self.sett)
                 self.step_count += 1
                 self.current_image = img
                 out.write(img)
                 if self.local:
                     self.images.append(img)
+
                 data_str = "_".join(map(str, list(filter(lambda x: x > 0, counts))))
                 data_str = f"{self.step_count}_{len(self.amebas)}_{len(self.foods)}:::{data_str}"
                 print(data_str)
@@ -128,16 +129,6 @@ class GameManager:
         :return: Return current image to videostream
         """
         return self.current_image
-
-    def create_video_after_game(self):
-        """
-            create video from set of images after games end
-            :return: nothing
-            """
-        try:
-            create_video(self.sett["image_folder"], self.images)
-        except IndexError as err:
-            print(f"Error while video creating : {err}")
 
     def simulate(self, organisms, foods_list):
         """
