@@ -69,7 +69,7 @@ class GameManager:
         :return: true when ends and false if got some exception
         """
         self.images = []
-        out = cv2.VideoWriter('project.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, (960,960))
+        out = cv2.VideoWriter('project.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, (960, 960))
         try:
             while self.step_count < self.steps:
                 if len(self.amebas) == 0:
@@ -122,7 +122,6 @@ class GameManager:
 
             meanMaxSpeed = np.mean([c.max_move_speed for c in self.amebas])
             print(f"Average maxSpeed: {meanMaxSpeed}")
-
 
     def getCurrentImage(self):
         """

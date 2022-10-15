@@ -13,6 +13,7 @@ from utils import colors
 def plot(ax_local, amebas, foods, gen_num, yx_local, fig):
     """
     Function that save current state as image
+    :param fig: figure to draw
     :param ax_local: plot
     :param amebas: list of organizms to plot
     :param foods: list of organizms to plot
