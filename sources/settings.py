@@ -13,7 +13,7 @@ settings_game_default = {
     "feed_distance": 0.02,
     "amebas_number": 6,
     "food_number": 50,
-    "max_steps": 15000,
+    "max_steps": 55000,
     "step_energy_drain": 0.4,
     "food_update": 1,
     "mut_factor": 15,

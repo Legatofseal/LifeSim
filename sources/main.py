@@ -10,19 +10,14 @@ import argparse
 import threading
 import cv2
 from flask import Flask, render_template, Response
-
+from waitress import serve
 from sources.Manager import GameManager
-
-
-
 
 # Initialize the Flask app
 app = Flask(__name__)
 
-
 def start_flask():
-    app.run(debug=False)
-
+    serve(app, host="0.0.0.0", port=5000)
 
 def main():
     """
