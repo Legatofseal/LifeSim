@@ -5,6 +5,7 @@ Manager file
 # pylint: disable=invalid-name
 # Reasonable in this case
 import json
+from random import random
 
 import cv2
 import numpy as np
@@ -70,13 +71,16 @@ class GameManager:
         self.images = []
         out = cv2.VideoWriter('project.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, (960,960))
         try:
-            while len(self.amebas) > 0 and self.step_count < self.steps:
+            while self.step_count < self.steps:
+                if len(self.amebas) == 0:
+                    x = random.randint(1, self.sett["amebas_number"])
+                    self.amebas.append(Organism(x, self.sett, tag=f"{x}"))
                 self.amebas.sort(key=lambda x: x.max_move_speed, reverse=True)
 
                 self.simulate(self.amebas, self.foods)
-                counts, img = plot(self.ax_plot, self.amebas, self.foods, self.step_count,
+                counts, img = plot(self.ax_plot, self.amebas, self.foods,
                                    self.gen_num, self.counts_of_generation,
-                                   self.sett["image_folder"], self.fig)
+                                   self.fig)
                 self.step_count += 1
                 self.current_image = img
                 out.write(img)
@@ -89,7 +93,9 @@ class GameManager:
         except ValueError as exep:
             print(f'Failed. Reason: {exep}')
             return False
+
         out.release()
+
         if len(self.amebas) > 0:
             tag_counter = {}
 
@@ -119,6 +125,9 @@ class GameManager:
 
 
     def getCurrentImage(self):
+        """
+        :return: Return current image to videostream
+        """
         return self.current_image
 
     def create_video_after_game(self):
@@ -149,6 +158,7 @@ class GameManager:
             foods_list.append(Food(self.sett))
 
         # CALCULATE HEADING TO NEAREST FOOD SOURCE
+        # pylint: disable=line-too-long
         def number_of_org_around_food(current_food):
             cnt_l = 0
             for org_l in organisms:
