@@ -9,7 +9,7 @@ from abc import abstractmethod
 import numpy as np
 from numpy import cos
 
-from sources.Entity import Entity
+from Entity import Entity
 
 
 class Life(Entity):
@@ -20,6 +20,7 @@ class Life(Entity):
         self.position_x = 0
         self.position_y = 0
         self.number = num
+        self.tag = ""
         # direction
 
         # organism properties
@@ -27,7 +28,9 @@ class Life(Entity):
         self.ready_for_sex = 0
         self.speed = 0
         self.velocity = 0
+
         self.size = 0
+
         self.ready_for_sex = 0
         self.food_count = self.size / 2  # fitness (food count)
         self.d_food = 0
@@ -79,22 +82,38 @@ class Life(Entity):
     def update_pos(self):
         return
 
-
+# pylint: disable=too-many-arguments
 class Organism(Life):
     def __init__(self, num: int,
-                 sett, neural_matrix=None, name=None):
+                 sett, neural_matrix=None, name=None, intel=None, tag="", size=None, max_move_speed=None):
         super().__init__(num)
         # position
+
         self.sett = sett
         self.position_x = uniform(0, int(sett['field_x']))  # position (x)
         self.position_y = uniform(0, int(sett['field_y']))  # position (y)
+        self.tag = tag
         # direction
 
         # organism properties
         self.number = num
         self.speed = int(self.sett["default_speed"])
-        self.velocity = self.speed
-        self.size = int(self.sett["default_size"])
+
+        if size:
+            self.size = size
+        else:
+            self.size = int(self.sett["default_size"])
+
+        if intel:
+            self.intelligence = int(intel)
+        else:
+            self.intelligence = 3
+
+        if max_move_speed:
+            self.max_move_speed = max_move_speed
+        else:
+            self.max_move_speed = self.sett["max_speed"]
+
         self.health = self.size
         self.food_count = self.size / 2  # fitness (food count)
         self.ready_for_sex = 3 / 4
@@ -102,11 +121,11 @@ class Organism(Life):
         self.current_direction = 0
 
         # neural settings
-        self.layers_number = 4
+        self.layers_number = self.intelligence
         self.neurons_number_in_layer = 3
         self.name = name
-        self.max_rot_speed = 15
-        self.max_move_speed = 0.02
+        self.max_rot_speed = 5
+
         self.neural_matrix = neural_matrix
 
         # features
@@ -135,7 +154,12 @@ class Organism(Life):
         n_neural = []
         for matrix in self.neural_matrix:
             n_neural.append(matrix * (1 + uniform(-self.mut_factor / 100, self.mut_factor / 100)))
-        new_org = Organism(10000 + self.number, sett=sett, neural_matrix=n_neural)
+        mut_intel = self.intelligence + uniform(0, 0.5)
+        mut_size = self.size * (1 + uniform(-self.mut_factor / 100, self.mut_factor / 100))
+        mut_move_speed = self.max_move_speed * (1 + uniform(-self.mut_factor / 100, self.mut_factor / 100))
+        new_org = Organism(10000 + self.number, sett=sett, neural_matrix=n_neural,
+                           intel=mut_intel, tag=self.tag, size=mut_size, max_move_speed=mut_move_speed)
+
         new_org.position_x = self.position_x + uniform(-0.05, 0.05)
         new_org.position_y = self.position_y + uniform(-0.05, 0.05)
         new_org.food_count = self.size / 2  # fitness (food count)
@@ -179,23 +203,27 @@ class Organism(Life):
         if self.current_rotation_speed < -self.max_rot_speed:
             self.current_rotation_speed = -self.max_rot_speed
         '''
+        #curspd_befor = self.current_rotation_speed
+        #cur_dic_before = self.current_direction
         self.current_rotation_speed = abs(self.current_rotation_speed) * self.max_rot_speed
         self.current_direction += self.current_rotation_speed
         self.current_direction = self.current_direction % 360
+        #print(f"{cur_dic_before}_{self.current_direction}_{self.current_rotation_speed}_{curspd_befor}")
 
     # UPDATE VELOCITY
+    #
     def update_vel(self):
         if self.current_speed > self.max_move_speed:
             self.current_speed = self.max_move_speed
-        if self.current_speed < -self.max_move_speed:
-            self.current_speed = -self.max_move_speed
-
-        self.velocity = self.current_speed
-
+        #if self.current_speed < -self.max_move_speed:
+        #    self.current_speed = -self.max_move_speed
+        if self.current_speed < 0:
+            self.current_speed = 0
     # UPDATE POSITION
     def update_pos(self):
-        delta_x = self.velocity * cos(radians(self.current_direction))
-        delta_y = self.velocity * sin(radians(self.current_direction))
+        delta_x = self.current_speed * cos(radians(self.current_direction))
+        delta_y = self.current_speed * sin(radians(self.current_direction))
+        #print(f"{delta_x}_{delta_y}")
         self.position_x += delta_x
         self.position_y += delta_y
         if self.position_x > 1:
@@ -206,3 +234,12 @@ class Organism(Life):
             self.position_x += 1
         if self.position_y < 0:
             self.position_y += 1
+
+    def size_coef(self):
+        return self.size / self.sett["default_size"]
+
+    def update_energy(self, en_drain):
+        self.food_count -= (en_drain * self.size_coef() + self.current_speed + float(self.intelligence) / 100)
+
+    def __str__(self):
+        return  f"Tag: {self.tag}, Size: {self.size}, Intel: {self.intelligence}, MaxSpeed: {self.max_move_speed}"

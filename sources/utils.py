@@ -7,6 +7,8 @@ import os
 import shutil
 from math import degrees, atan2
 import random
+
+import PIL
 import cv2
 
 from sources.Entity import Entity
@@ -58,32 +60,6 @@ def create_folder(folder):
                 shutil.rmtree(file_path)
         except FileNotFoundError as exep:
             print(f'Failed to delete {file_path}. Reason: {exep}')
-
-
-def create_video(folder, list_images=None):
-    """
-    Create video from after game, from folder or list of images
-    :param folder: folder
-    :param list_images: list_images
-    :return: nothing
-    """
-    # Function to plot
-    img_array = []
-    if not list_images:
-        for filename in glob.glob(f'{folder}/*.png'):
-            img = cv2.imread(filename)
-            height, width, _ = img.shape
-            size = (width, height)
-            img_array.append(img)
-    else:
-        size = list_images[0].size
-        img_array = list_images
-    out = cv2.VideoWriter('project.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
-
-    for img in img_array:
-        out.write(img)
-    out.release()
-
 
 def dist(ent1: Entity, ent2: Entity):
     """

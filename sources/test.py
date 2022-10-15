@@ -1,12 +1,12 @@
-import glob
-
+#Import necessary libraries
+from flask import Flask, render_template, Response
 import cv2
+#Initialize the Flask app
+app = Flask(__name__)
 
-img_array = []
-for filename in glob.glob('images/*.png'):
-    img = cv2.imread(filename)
-    height, width, layers = img.shape
-    size = (width, height)
-    img_array.append(img)
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-out = cv2.VideoWriter('project.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, size)
+if __name__ == "__main__":
+    app.run(debug=True)

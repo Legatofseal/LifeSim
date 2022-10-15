@@ -1,6 +1,9 @@
 """
 Plot current game state
 """
+import PIL
+import cv2
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.patches import Circle
 
@@ -8,7 +11,7 @@ from utils import colors
 
 # pylint: disable=too-many-arguments
 # Reasonable in this case
-def plot(ax_local, amebas, foods, step_count, gen_num, yx_local, folder):
+def plot(ax_local, amebas, foods, step_count, gen_num, yx_local, folder, fig):
     """
     Function that save current state as image
     :param ax_local: plot
@@ -25,9 +28,9 @@ def plot(ax_local, amebas, foods, step_count, gen_num, yx_local, folder):
     for a_data in amebas:
         # pylint: disable=R0913
         # pylint: disable-msg=too-many-arguments
-        edge = Circle([a_data.position_x, a_data.position_y], 0.01,
+        edge = Circle([a_data.position_x, a_data.position_y], a_data.size/(50*100),
                       facecolor='None', edgecolor='darkgreen', zorder=8)
-        circle = Circle([a_data.position_x, a_data.position_y], 0.01,
+        circle = Circle([a_data.position_x, a_data.position_y], a_data.size/(50*100),
                         edgecolor='g', facecolor=colors[a_data.generation - 1], zorder=8,
                         alpha=0.4)
 
@@ -43,5 +46,14 @@ def plot(ax_local, amebas, foods, step_count, gen_num, yx_local, folder):
     for i in range(len(yx_local)):
         yx_local[i].append(cnts[i])
 
-    plt.savefig(f"{folder}/" + str(step_count).zfill(6) + '.png', dpi=100)
-    return cnts
+    #plt.savefig(f"{folder}/" + str(step_count).zfill(6) + '.png', dpi=100)
+
+    fig.canvas.draw()
+
+    img = cv2.cvtColor(np.asarray(fig.canvas.buffer_rgba()), cv2.COLOR_RGBA2BGR)
+    img = img.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+
+
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+    return cnts, img
