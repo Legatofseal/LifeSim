@@ -3,28 +3,29 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=line-too-long, too-many-instance-attributes
 import random
+import string
 from math import radians, sin
 from random import uniform
 from abc import abstractmethod
 import numpy as np
 from numpy import cos
 
-from Entity import Entity
+from sources.entity import Entity
 
 
 class Life(Entity):
 
-    def __init__(self, num: int, neural_matrix=None, name=None):
+    def __init__(self, neural_matrix=None, name=None):
         super().__init__()
         # position
         self.position_x = 0
         self.position_y = 0
-        self.number = num
+
         self.tag = ""
         # direction
 
         # organism properties
-        self.number = 0
+
         self.ready_for_sex = 0
         self.speed = 0
         self.velocity = 0
@@ -82,22 +83,24 @@ class Life(Entity):
     def update_pos(self):
         return
 
+
 # pylint: disable=too-many-arguments
 class Organism(Life):
-    def __init__(self, num: int,
-                 sett, neural_matrix=None, name=None, intel=None, tag="", size=None, max_move_speed=None):
-        super().__init__(num)
+    def __init__(self, org_settings, manager,
+                 generation=None, neural_matrix=None, intel=None, size=None, max_move_speed=None):
+        super().__init__()
         # position
+        self.position_x = uniform(0, manager.game_sett['field_x'])  # position (x)
+        self.position_y = uniform(0, manager.game_sett['field_y'])  # position (y)
 
-        self.sett = sett
-        self.position_x = uniform(0, int(sett['field_x']))  # position (x)
-        self.position_y = uniform(0, int(sett['field_y']))  # position (y)
-        self.tag = tag
-        # direction
+        self.sett = org_settings
+        self.tag = self.sett["tag"]
+        self.manager = manager
 
-        # organism properties
-        self.number = num
-        self.speed = int(self.sett["default_speed"])
+        if max_move_speed:
+            self.max_move_speed = max_move_speed
+        else:
+            self.max_move_speed = self.sett["max_speed"]
 
         if size:
             self.size = size
@@ -109,11 +112,12 @@ class Organism(Life):
         else:
             self.intelligence = 3
 
-        if max_move_speed:
-            self.max_move_speed = max_move_speed
+        if generation:
+            self.generation = generation
         else:
-            self.max_move_speed = self.sett["max_speed"]
+            self.generation = 1
 
+        self.speed = self.max_move_speed / 2
         self.health = self.size
         self.food_count = self.size / 2  # fitness (food count)
         self.ready_for_sex = 3 / 4
@@ -122,30 +126,30 @@ class Organism(Life):
 
         # neural settings
         self.layers_number = self.intelligence
-        self.neurons_number_in_layer = 3
-        self.name = name
+
+        self.name = ''.join(random.choice(string.ascii_lowercase) for i in range(10))
         self.max_rot_speed = 5
 
         self.neural_matrix = neural_matrix
 
         # features
-        self.features_dict = self.sett["full_features_dict"]
+        self.num_of_n_in_output_layer = 3
+        self.neurons_number_in_layer = 3
+        self.num_of_n_in_input_layer = 3
         self.features_list = []
-
-        self.decisions_dict = self.sett["decisions_dict"]
 
         self.mut_factor = int(self.sett["mut_factor"])
         self.neural_matrix = []
 
-        self.generation = 1
         if not neural_matrix:
             self.neural_matrix = []
-            self.neural_matrix.append(np.random.uniform(-1, 1, (len(self.features_dict), self.neurons_number_in_layer)))
+            self.neural_matrix.append(
+                np.random.uniform(-1, 1, (self.num_of_n_in_input_layer, self.neurons_number_in_layer)))
             for _ in range(self.layers_number - 2):
                 self.neural_matrix.append(
                     np.random.uniform(-1, 1, (self.neurons_number_in_layer, self.neurons_number_in_layer)))
             self.neural_matrix.append(
-                np.random.uniform(-1, 1, (self.neurons_number_in_layer, len(self.sett["decisions_dict"]))))
+                np.random.uniform(-1, 1, (self.neurons_number_in_layer, self.num_of_n_in_output_layer)))
         else:
             self.neural_matrix = neural_matrix
 
@@ -157,7 +161,9 @@ class Organism(Life):
         mut_intel = self.intelligence + uniform(0, 0.5)
         mut_size = self.size * (1 + uniform(-self.mut_factor / 100, self.mut_factor / 100))
         mut_move_speed = self.max_move_speed * (1 + uniform(-self.mut_factor / 100, self.mut_factor / 100))
-        new_org = Organism(10000 + self.number, sett=sett, neural_matrix=n_neural,
+
+        new_org = Organism(self.sett,self.manager,
+                           generation=self.generation+1,  neural_matrix=n_neural,
                            intel=mut_intel, tag=self.tag, size=mut_size, max_move_speed=mut_move_speed)
 
         new_org.position_x = self.position_x + uniform(-0.05, 0.05)
@@ -215,6 +221,7 @@ class Organism(Life):
 
         if self.current_speed < 0:
             self.current_speed = 0
+
     # UPDATE POSITION
     def update_pos(self):
         delta_x = self.current_speed * cos(radians(self.current_direction))
@@ -222,14 +229,14 @@ class Organism(Life):
 
         self.position_x += delta_x
         self.position_y += delta_y
-        if self.position_x > self.sett["field_x"]:
-            self.position_x -= self.sett["field_x"]
-        if self.position_y > self.sett["field_y"]:
-            self.position_y -= self.sett["field_y"]
+        if self.position_x > self.manager.game_sett["field_x"]:
+            self.position_x -= self.manager.game_sett["field_x"]
+        if self.position_y > self.manager.game_sett["field_y"]:
+            self.position_y -= self.manager.game_sett["field_y"]
         if self.position_x < 0:
-            self.position_x += self.sett["field_x"]
+            self.position_x += self.manager.game_sett["field_x"]
         if self.position_y < 0:
-            self.position_y += self.sett["field_y"]
+            self.position_y += self.manager.game_sett["field_y"]
 
     def size_coef(self):
         return self.size / self.sett["default_size"]
@@ -238,4 +245,4 @@ class Organism(Life):
         self.food_count -= (en_drain * self.size_coef() + self.current_speed + float(self.intelligence) / 100)
 
     def __str__(self):
-        return  f"Tag: {self.tag}, Size: {self.size}, Intel: {self.intelligence}, MaxSpeed: {self.max_move_speed}"
+        return f"Tag: {self.tag}, Size: {self.size}, Intel: {self.intelligence}, MaxSpeed: {self.max_move_speed}"

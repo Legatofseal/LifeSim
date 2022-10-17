@@ -40,7 +40,7 @@ def plot(ax_local, amebas, foods, gen_num, yx_local, fig, settings):
         ax_local.add_artist(circle)
         ax_local.text(a_data.position_x - 0.005, a_data.position_y - 0.005,
                       str(a_data.generation), fontsize=6)
-        cnts[a_data.number // 10000] += 1
+        cnts[a_data.generation] += 1
 
     for f_data in foods:
         circle = Circle([f_data.position_x, f_data.position_y], 0.005,

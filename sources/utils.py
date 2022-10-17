@@ -2,16 +2,9 @@
 utils for game
 """
 # pylint: disable=maybe-no-member
-import glob
-import os
-import shutil
 from math import degrees, atan2
 import random
-
-import PIL
-import cv2
-
-from sources.Entity import Entity
+from sources.entity import Entity
 
 NUM_OF_COLORS = 150
 
@@ -41,25 +34,6 @@ def random_color():
 
 for i in range(0, NUM_OF_COLORS):
     colors.append(random_color())
-
-
-def create_folder(folder):
-    """
-    Create folder or clear if exist
-    :param folder:
-    :return:
-    """
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    for filename in os.listdir(folder):
-        file_path = os.path.join(folder, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except FileNotFoundError as exep:
-            print(f'Failed to delete {file_path}. Reason: {exep}')
 
 def dist(ent1: Entity, ent2: Entity):
     """

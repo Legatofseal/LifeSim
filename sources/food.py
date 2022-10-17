@@ -6,7 +6,7 @@ This module define food class
 from random import uniform
 import random
 
-from sources.Entity import Entity
+from sources.entity import Entity
 
 
 class Food(Entity):
