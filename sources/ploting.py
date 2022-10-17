@@ -5,12 +5,9 @@ import cv2
 import numpy as np
 from matplotlib.patches import Circle
 
-from utils import colors
-
-
 # pylint: disable=too-many-arguments
 # Reasonable in this case
-def plot(ax_local, amebas, foods, gen_num, yx_local, fig, settings):
+def plot(ax_local, amebas, foods, gen_num, yx_local, fig, settings, draw_colors, stat):
     """
     Function that save current state as image
     :param fig: figure to draw
@@ -24,6 +21,7 @@ def plot(ax_local, amebas, foods, gen_num, yx_local, fig, settings):
     :return:
     """
     ax_local.clear()
+    ax_local.set_title(stat)
     ax_local.set_xlim([0, settings["field_x"]])
     ax_local.set_ylim([0, settings["field_y"]])
     cnts = [0 for _ in range(gen_num)]
@@ -33,7 +31,7 @@ def plot(ax_local, amebas, foods, gen_num, yx_local, fig, settings):
         edge = Circle([a_data.position_x, a_data.position_y], a_data.size / (50 * 100),
                       facecolor='None', edgecolor='darkgreen', zorder=8)
         circle = Circle([a_data.position_x, a_data.position_y], a_data.size / (50 * 100),
-                        edgecolor='g', facecolor=colors[a_data.generation - 1], zorder=8,
+                        edgecolor='g', facecolor=draw_colors[a_data.tag], zorder=8,
                         alpha=0.4)
 
         ax_local.add_artist(edge)

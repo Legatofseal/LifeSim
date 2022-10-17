@@ -11,10 +11,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from food import Food
+from gameStat import get_game_stat
 from organims import Organism
 from ploting import plot
 from settings import settings_game_default
-from utils import dist
+from utils import dist, colors_list
 
 
 class GameManager:
@@ -32,7 +33,7 @@ class GameManager:
         self.current_image = None
         if local:
             self.local = local
-
+        self.statistic = ""
         if write_settings_to_file:
             with open("setting.json", "w", encoding="utf-8") as outfile:
                 json.dump(self.game_sett, outfile, indent=4)
@@ -49,6 +50,7 @@ class GameManager:
         self.x_count = range(0, self.steps)
         self.step_count = 0
         self.images = []
+        self.draw_colors = {}
 
     def start(self):
         """
@@ -60,11 +62,13 @@ class GameManager:
         if self.local:
             self.images = []
             out = cv2.VideoWriter('project.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, (960, 960))
-
+        self.statistic = ""
         self.amebas.clear()
         self.foods.clear()
-        for a in self.game_sett["am_config"]:
-            self.amebas.append(Organism(a, self))
+        for i, a in enumerate(self.game_sett["am_config"]):
+            for _ in range(0, a["number_of_amebas"]):
+                self.amebas.append(Organism(a, self))
+            self.draw_colors[a["tag"]] = colors_list[i]
 
         self.foods = [Food(self.game_sett) for _ in range(1, self.game_sett["food_number"])]
 
@@ -74,11 +78,11 @@ class GameManager:
                     break
 
                 self.amebas.sort(key=lambda x: x.max_move_speed, reverse=True)
-
+                self.statistic = get_game_stat(self)
                 self.simulate(self.amebas, self.foods)
                 counts, img = plot(self.ax_plot, self.amebas, self.foods,
                                    self.gen_num, self.counts_of_generation,
-                                   self.fig, self.game_sett)
+                                   self.fig, self.game_sett, self.draw_colors,self.statistic)
                 self.step_count += 1
                 self.current_image = img
 
@@ -86,9 +90,9 @@ class GameManager:
                     self.images.append(img)
                     out.write(img)
 
-                data_str = "_".join(map(str, list(filter(lambda x: x > 0, counts))))
-                data_str = f"{self.step_count}_{len(self.amebas)}_{len(self.foods)}:::{data_str}"
-                print(data_str)
+                # data_str = "_".join(map(str, list(filter(lambda x: x > 0, counts))))
+                # data_str = f"{self.step_count}_{len(self.amebas)}_{len(self.foods)}:::{data_str}"
+                print(self.statistic)
 
         except ValueError as exep:
             print(f'Failed. Reason: {exep}')

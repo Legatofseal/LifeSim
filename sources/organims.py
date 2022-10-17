@@ -164,7 +164,7 @@ class Organism(Life):
 
         new_org = Organism(self.sett,self.manager,
                            generation=self.generation+1,  neural_matrix=n_neural,
-                           intel=mut_intel, tag=self.tag, size=mut_size, max_move_speed=mut_move_speed)
+                           intel=mut_intel, size=mut_size, max_move_speed=mut_move_speed)
 
         new_org.position_x = self.position_x + uniform(-0.05, 0.05)
         new_org.position_y = self.position_y + uniform(-0.05, 0.05)

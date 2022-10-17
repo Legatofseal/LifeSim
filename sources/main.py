@@ -16,8 +16,10 @@ from sources.Manager import GameManager
 # Initialize the Flask app
 app = Flask(__name__)
 
+
 def start_flask():
     serve(app, host="0.0.0.0", port=5000)
+
 
 def main():
     """
@@ -54,7 +56,9 @@ def main():
     def video_feed():
         return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-
+    @app.route('/stats')
+    def stats():
+        return Response(get_stat(), mimetype='text/plain; boundary=frame')
 
     def gen_frames():
         while True:
@@ -66,6 +70,9 @@ def main():
                     yield (b'--frame\r\n'
                            b'Content-Type: image/jpeg\r\n\r\n'
                            + frame + b'\r\n')  # concat frame one by one and show result
+    def get_stat():
+        return manager.statistic
+
     manager.start()
 
 

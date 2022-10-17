@@ -8,12 +8,12 @@ from sources.entity import Entity
 
 NUM_OF_COLORS = 150
 
-colors = [
-    "lightgreen",
-    "rosybrown",
+colors_list = [
+    "green",
+    "magenta",
     "lavender",
     "plum",
-    "magenta",
+    "red",
     "skyblue",
     "chocolate",
     "coral",
@@ -30,10 +30,6 @@ def random_color():
     :return:
     """
     return random.random(), random.random(), random.random()
-
-
-for i in range(0, NUM_OF_COLORS):
-    colors.append(random_color())
 
 def dist(ent1: Entity, ent2: Entity):
     """
