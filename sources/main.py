@@ -8,6 +8,8 @@ from __future__ import division, print_function
 import json
 import argparse
 import threading
+
+
 import cv2
 from flask import Flask, render_template, Response
 from waitress import serve
@@ -18,7 +20,7 @@ app = Flask(__name__)
 
 
 def start_flask():
-    serve(app, host="0.0.0.0", port=5000)
+    serve(app, host="0.0.0.0", port=5000, threads=8)
 
 
 def main():
@@ -60,6 +62,16 @@ def main():
     def stats():
         return Response(get_stat(), mimetype='text/plain; boundary=frame')
 
+    @app.route('/Start')
+    def Start():
+        manager.start()
+        return render_template('index.html')
+
+    @app.route('/Stop')
+    def Stop():
+        manager.game_in_process = False
+        return render_template('index.html')
+
     def gen_frames():
         while True:
             if manager:
@@ -70,6 +82,7 @@ def main():
                     yield (b'--frame\r\n'
                            b'Content-Type: image/jpeg\r\n\r\n'
                            + frame + b'\r\n')  # concat frame one by one and show result
+
     def get_stat():
         return manager.statistic
 

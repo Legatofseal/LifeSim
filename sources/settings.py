@@ -30,6 +30,15 @@ settings_game_default = {
             "feed_distance": 0.02,
             "number_of_amebas": 5,
         },
+        {
+            "tag": "Team3",
+            "default_size": 20.0,
+            "max_speed": 0.15,
+            "step_energy_drain": 0.2,
+            "mut_factor": 15,
+            "feed_distance": 0.02,
+            "number_of_amebas": 5,
+        },
     ],
 }
 

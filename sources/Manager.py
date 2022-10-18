@@ -8,6 +8,8 @@ import json
 
 import cv2
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
 from food import Food
@@ -25,6 +27,7 @@ class GameManager:
 
     def __init__(self, sett=None, write_settings_to_file=False, local=None):
 
+        self.game_in_process =  False
         if not sett:
             self.game_sett = settings_game_default
         else:
@@ -59,6 +62,7 @@ class GameManager:
 
         :return: true when ends and false if got some exception
         """
+        self.game_in_process = True
         if self.local:
             self.images = []
             out = cv2.VideoWriter('project.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, (960, 960))
@@ -75,6 +79,9 @@ class GameManager:
         try:
             while self.step_count < self.steps:
                 if len(self.amebas) == 0:
+                    self.game_in_process = False
+                    break
+                if not self.game_in_process:
                     break
 
                 self.amebas.sort(key=lambda x: x.max_move_speed, reverse=True)
