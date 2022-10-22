@@ -99,7 +99,7 @@ class GameManager:
 
                 # data_str = "_".join(map(str, list(filter(lambda x: x > 0, counts))))
                 # data_str = f"{self.step_count}_{len(self.amebas)}_{len(self.foods)}:::{data_str}"
-                print(self.statistic)
+                # print(self.statistic)
 
         except ValueError as exep:
             print(f'Failed. Reason: {exep}')
