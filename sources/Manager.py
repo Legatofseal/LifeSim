@@ -12,12 +12,12 @@ import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 
-from food import Food
-from gameStat import get_game_stat
-from organims import Organism
-from ploting import plot
-from settings import settings_game_default
-from utils import dist, colors_list
+from sources.food import Food
+from sources.gameStat import get_game_stat
+from sources.organims import Organism
+from sources.ploting import plot
+from sources.settings import settings_game_default
+from sources.utils import dist, colors_list
 
 
 class GameManager:
